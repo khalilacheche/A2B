@@ -1,5 +1,6 @@
 import requests
 import json
+from co2calculator.co2calculator import calc_co2_bus,calc_co2_car,calc_co2_train
 API_URL = "https://journey-service-int.api.sbb.ch"
 CLIENT_SECRET = "MU48Q~IuD6Iawz3QfvkmMiKHtfXBf-ffKoKTJdt5"
 CLIENT_ID = "f132a280-1571-4137-86d7-201641098ce8"
@@ -48,16 +49,37 @@ def get_path(headers,origin:str,destination:str,date:str,time:str):
     trips = res["trips"]
     results= []
     for trip in trips:
-        try:
             tripSummary = {
                 "origin":trip["summary"]["firstStopPlace"]["place"]["name"],
                 "destination":trip["summary"]["lastStopPlace"]["place"]["name"],
-                "path":[{"mode":t["mode"],"duration":t["duration"],"departure":t["serviceJourney"]["stopPoints"][0]["departure"]["timeAimed"]} for t in trip["legs"]]
             }
+            paths= []
+            """
+            "mode":t["mode"],
+                         "duration":t["duration"],
+                         "departure":{"place":t["serviceJourney"]["stopPoints"][0]["place"]["centroid"],"time":t["serviceJourney"]["stopPoints"][0]["departure"]["timeAimed"]},
+                         } 
+            """
+            for t in trip["legs"]:
+                if("serviceJourney" in t and "mode" in t and "duration" in t):
+                    journey = t["serviceJourney"]
+                    departureTime = journey["stopPoints"][0]["departure"]["timeAimed"]
+                    departurePlaceCoordinates = journey["stopPoints"][0]["place"]["centroid"]["coordinates"]
+                    arrivalTime =  journey["stopPoints"][-1]["arrival"]["timeAimed"]
+                    arrivalDeparturePlaceCoordinates=journey["stopPoints"][-1]["place"]["centroid"]["coordinates"]
+                    mode = t["mode"]
+                    duration=t["duration"]
+                    paths.append({
+                        "mode":mode,
+                        "duration":duration,
+                        "departureTime":departureTime,
+                        "departurePlaceCoordinates":departurePlaceCoordinates,
+                        "arrivalTime":arrivalTime,
+                        "arrivalDeparturePlaceCoordinates":arrivalDeparturePlaceCoordinates
+                    })
+            tripSummary["path"] = paths
             results.append(tripSummary)
-        except Exception:
-            pass
-    print(results)
+    return results
 
     
     
