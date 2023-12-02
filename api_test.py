@@ -1,6 +1,8 @@
 import requests
 import json
 from co2calculator.co2calculator import calc_co2_bus,calc_co2_car,calc_co2_train
+import geopy.distance
+
 API_URL = "https://journey-service-int.api.sbb.ch"
 CLIENT_SECRET = "MU48Q~IuD6Iawz3QfvkmMiKHtfXBf-ffKoKTJdt5"
 CLIENT_ID = "f132a280-1571-4137-86d7-201641098ce8"
@@ -75,12 +77,32 @@ def get_path(headers,origin:str,destination:str,date:str,time:str):
                         "departureTime":departureTime,
                         "departurePlaceCoordinates":departurePlaceCoordinates,
                         "arrivalTime":arrivalTime,
-                        "arrivalDeparturePlaceCoordinates":arrivalDeparturePlaceCoordinates
+                        "arrivalPlaceCoordinates":arrivalDeparturePlaceCoordinates
                     })
             tripSummary["path"] = paths
+            tripSummary["co2_emissions"] = sum([calculate_co2_emissions(path) for path in paths])
             results.append(tripSummary)
+    print(results)
     return results
 
+
+
+def calculate_co2_emissions(path):
+    if("arrivalPlaceCoordinates" in path and "departurePlaceCoordinates" in path):
+        departurePlaceCoordinates = path["departurePlaceCoordinates"]
+        arrivalPlaceCoordinates = path["arrivalPlaceCoordinates"]
+        distance = geopy.distance.geodesic(tuple(departurePlaceCoordinates), tuple(arrivalPlaceCoordinates)).km
+        mode = path["mode"]
+        if(mode=="METRO" or mode=="TRAIN"):
+            return calc_co2_train(distance)
+        if(mode=="BUS"):
+            return calc_co2_bus(distance)
+        if(mode=="CAR"):
+            return calc_co2_car(distance)
+        return 0
+    else:
+        print("bad format")
+        return 0 
     
     
 

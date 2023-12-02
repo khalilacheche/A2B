@@ -6,3 +6,4 @@ thefuzz
 pydantic==1.9.0
 python-Levenshtein
 iso3166
+geopy
