@@ -228,12 +228,15 @@ def get_home_paths(
     paths = [
         get_home_path(
             start_coordinates, arrival_coordinates, distance, "FOOT", date, time
-        ),
-        get_home_path(
-            start_coordinates, arrival_coordinates, distance, "BIKE", date, time
-        ),
+        )
     ]
     mobilitat = pd.read_csv("data/mobilitat.csv", delimiter=";")
+    if start_id in mobilitat[mobilitat[""] != 0]["OPUIC"]:
+        paths.append(
+            get_home_path(
+                start_coordinates, arrival_coordinates, distance, "BIKE", date, time
+            )
+        )
     if start_id in mobilitat["OPUIC"]:
         paths.append(
             get_home_path(
