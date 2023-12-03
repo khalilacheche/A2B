@@ -2,6 +2,7 @@ import requests
 import pandas as pd
 from datetime import datetime, timedelta
 from isodate import duration_isoformat
+from api_test import use_token, get_path, calculate_co2_emissions
 
 
 def fetch_stations(latitude, longitude, radius=10000, limit=50):
@@ -130,3 +131,82 @@ def get_work_path(start_coordinates, arrival_coordinates, distance, mode, date, 
         "arrival_time": arrival.strftime("%H:%M"),
         "arrivalPlaceCoordinates": arrival_coordinates,
     }
+
+
+def normalize_column(column):
+    min_val = float(column.min())
+    max_val = float(column.max())
+    normalized_column = (column - min_val) / (max_val - min_val)
+    return normalized_column
+
+
+def calculate_score(row, co2_weight, time_weight, transfers_weight):
+    return (
+        co2_weight * row["CO2 emissions"]
+        + time_weight * row["time"]
+        + transfers_weight * row["transfers"]
+    )
+
+
+def get_reduced_path(origin: str, destination: str, date: str, time: str):
+    headers = use_token()
+    results = get_path(headers, origin, destination, date, time)
+    return [(result["path"], result["co2_emissions"]) for result in results]
+
+
+def transform(row):
+    paths = row["path"]
+
+    if paths[0]["arrival_time"] != paths[1]["departure_time"]:
+        diff = datetime.strptime(
+            f"{paths[1]['departure_date']} {paths[1]['departure_time']}",
+            "%Y-%m-%d %H:%M",
+        ) - datetime.strptime(
+            f"{paths[0]['arrival_date']} {paths[0]['arrival_time']}", "%Y-%m-%d %H:%M"
+        )
+        paths[0]["departure_date"] = (
+            datetime.strptime(
+                f"{paths[0]['departure_date']} {paths[0]['departure_time']}",
+                "%Y-%m-%d %H:%M",
+            )
+            + diff
+        ).strftime("%Y-%m-%d")
+        paths[0]["departure_time"] = (
+            datetime.strptime(
+                f"{paths[0]['departure_date']} {paths[0]['departure_time']}",
+                "%Y-%m-%d %H:%M",
+            )
+            + diff
+        ).strftime("%H:%M")
+        paths[0]["arrival_date"] = (
+            datetime.strptime(
+                f"{paths[0]['arrival_date']} {paths[0]['arrival_time']}",
+                "%Y-%m-%d %H:%M",
+            )
+            + diff
+        ).strftime("%Y-%m-%d")
+        paths[0]["arrival_time"] = (
+            datetime.strptime(
+                f"{paths[0]['arrival_date']} {paths[0]['arrival_time']}",
+                "%Y-%m-%d %H:%M",
+            )
+            + diff
+        ).strftime("%H:%M")
+
+    time = (
+        datetime.strptime(
+            f"{paths[-1]['arrival_date']} {paths[-1]['arrival_time']}",
+            "%Y-%m-%d %H:%M",
+        )
+        - datetime.strptime(
+            f"{paths[0]['departure_date']} {paths[0]['departure_time']}",
+            "%Y-%m-%d %H:%M",
+        )
+    ).seconds
+
+    transfers = len(paths)
+
+    row["time"] = time
+    row["transfers"] = transfers
+
+    return row

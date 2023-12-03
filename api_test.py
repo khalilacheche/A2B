@@ -68,33 +68,6 @@ def get_path(headers, origin: str, destination: str, date: str, time: str):
                          "departure":{"place":t["serviceJourney"]["stopPoints"][0]["place"]["centroid"],"time":t["serviceJourney"]["stopPoints"][0]["departure"]["timeAimed"]},
                          } 
             """
-<<<<<<< HEAD
-            for t in trip["legs"]:
-                if("serviceJourney" in t and "mode" in t and "duration" in t):
-                    journey = t["serviceJourney"]
-                    departureTime = journey["stopPoints"][0]["departure"]["timeAimed"]
-                    departurePlaceCoordinates = journey["stopPoints"][0]["place"]["centroid"]["coordinates"]
-                    arrivalTime =  journey["stopPoints"][-1]["arrival"]["timeAimed"]
-                    arrivalPlaceCoordinates=journey["stopPoints"][-1]["place"]["centroid"]["coordinates"]
-                    mode = t["mode"]
-                    duration=t["duration"]
-                    departurePlace = journey["stopPoints"][0]["place"]["name"]
-                    arrivalPlace = journey["stopPoints"][-1]["place"]["name"]
-                    paths.append({
-                        "mode":mode,
-                        "duration":duration,
-                        "departureTime":departureTime,
-                        "departurePlaceCoordinates":departurePlaceCoordinates,
-                        "departurePlace":departurePlace,
-                        "arrivalTime":arrivalTime,
-                        "arrivalPlace":arrivalPlace,
-                        "arrivalPlaceCoordinates":arrivalPlaceCoordinates
-                    })
-            tripSummary["path"] = paths
-            tripSummary["co2_emissions"] = sum([calculate_co2_emissions(path) for path in paths])
-            results.append(tripSummary)
-    print(results)
-=======
         for t in trip["legs"]:
             if "serviceJourney" in t and "mode" in t and "duration" in t:
                 journey = t["serviceJourney"]
@@ -102,6 +75,8 @@ def get_path(headers, origin: str, destination: str, date: str, time: str):
                 departurePlaceCoordinates = journey["stopPoints"][0]["place"][
                     "centroid"
                 ]["coordinates"]
+                depaturePlace = journey["stopPoints"][0]["place"]["name"]
+                arrivalPlace = journey["stopPoints"][-1]["place"]["name"]
                 arrivalTime = journey["stopPoints"][-1]["arrival"]["timeAimed"]
                 arrivalDeparturePlaceCoordinates = journey["stopPoints"][-1]["place"][
                     "centroid"
@@ -118,6 +93,7 @@ def get_path(headers, origin: str, destination: str, date: str, time: str):
                         "departure_time": datetime.fromisoformat(
                             departureTime
                         ).strftime("%H:%M"),
+                        "departurePlace": depaturePlace,
                         "departurePlaceCoordinates": departurePlaceCoordinates,
                         "arrival_date": datetime.fromisoformat(arrivalTime).strftime(
                             "%Y-%m-%d"
@@ -126,6 +102,7 @@ def get_path(headers, origin: str, destination: str, date: str, time: str):
                             "%H:%M"
                         ),
                         "arrivalPlaceCoordinates": arrivalDeparturePlaceCoordinates,
+                        "arrivalPlace": arrivalPlace,
                     }
                 )
         tripSummary["path"] = paths
@@ -134,7 +111,6 @@ def get_path(headers, origin: str, destination: str, date: str, time: str):
         )
         results.append(tripSummary)
     # print(results)
->>>>>>> e1b4364f351b9d46ffa2af5c34fd5fc3630e7249
     return results
 
 
@@ -160,10 +136,6 @@ def calculate_co2_emissions(path):
 
 if __name__ == "__main__":
     headers = use_token()
-<<<<<<< HEAD
-    results = get_path(headers=headers,origin="8592165",destination="8501214",date="2023-12-02",time="17:07")
-    #r = requests.request(url="https://prail.api.sbb.ch:443"+"/api/v2/amanda/parking-facilities",method="GET",headers=headers)
-=======
     results = get_path(
         headers=headers,
         origin="8592165",
@@ -171,4 +143,3 @@ if __name__ == "__main__":
         date="2023-12-02",
         time="17:07",
     )
->>>>>>> e1b4364f351b9d46ffa2af5c34fd5fc3630e7249
