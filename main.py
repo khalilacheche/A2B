@@ -344,7 +344,7 @@ def transform(row):
 
     transfers = len(paths)
 
-    row["time"] = time
+    row["duration"] = time
     row["transfers"] = transfers
 
     return row
@@ -450,13 +450,13 @@ def find_recommended_paths(
         }
     )
 
-    final_df["time"] = 0
+    final_df["duration"] = 0
     final_df["transfers"] = 0
 
     final_df = final_df.apply(transform, axis=1)
 
     final_df["CO2 emissions"] = normalize_column(final_df["CO2 emissions"])
-    final_df["time"] = normalize_column(final_df["time"])
+    final_df["time"] = normalize_column(final_df["duration"])
     final_df["transfers"] = normalize_column(final_df["transfers"])
 
     final_df["score"] = 0
