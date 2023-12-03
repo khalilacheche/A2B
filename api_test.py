@@ -106,7 +106,7 @@ def get_path(headers, origin: str, destination: str, date: str, time: str):
             [calculate_co2_emissions(path) for path in paths]
         )
         results.append(tripSummary)
-    print(results)
+    # print(results)
     return results
 
 
