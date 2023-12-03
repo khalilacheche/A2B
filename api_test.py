@@ -68,16 +68,20 @@ def get_path(headers,origin:str,destination:str,date:str,time:str):
                     departureTime = journey["stopPoints"][0]["departure"]["timeAimed"]
                     departurePlaceCoordinates = journey["stopPoints"][0]["place"]["centroid"]["coordinates"]
                     arrivalTime =  journey["stopPoints"][-1]["arrival"]["timeAimed"]
-                    arrivalDeparturePlaceCoordinates=journey["stopPoints"][-1]["place"]["centroid"]["coordinates"]
+                    arrivalPlaceCoordinates=journey["stopPoints"][-1]["place"]["centroid"]["coordinates"]
                     mode = t["mode"]
                     duration=t["duration"]
+                    departurePlace = journey["stopPoints"][0]["place"]["name"]
+                    arrivalPlace = journey["stopPoints"][-1]["place"]["name"]
                     paths.append({
                         "mode":mode,
                         "duration":duration,
                         "departureTime":departureTime,
                         "departurePlaceCoordinates":departurePlaceCoordinates,
+                        "departurePlace":departurePlace,
                         "arrivalTime":arrivalTime,
-                        "arrivalPlaceCoordinates":arrivalDeparturePlaceCoordinates
+                        "arrivalPlace":arrivalPlace,
+                        "arrivalPlaceCoordinates":arrivalPlaceCoordinates
                     })
             tripSummary["path"] = paths
             tripSummary["co2_emissions"] = sum([calculate_co2_emissions(path) for path in paths])
@@ -109,5 +113,4 @@ def calculate_co2_emissions(path):
 if __name__ == "__main__":
     headers = use_token()
     results = get_path(headers=headers,origin="8592165",destination="8501214",date="2023-12-02",time="17:07")
-
-    
+    #r = requests.request(url="https://prail.api.sbb.ch:443"+"/api/v2/amanda/parking-facilities",method="GET",headers=headers)
