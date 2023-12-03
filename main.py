@@ -231,7 +231,7 @@ def get_home_paths(
         )
     ]
     mobilitat = pd.read_csv("data/mobilitat.csv", delimiter=";")
-    if start_id in mobilitat[mobilitat[""] != 0]["OPUIC"]:
+    if start_id in mobilitat[mobilitat["rental_bike_number"] != 0]["OPUIC"]:
         paths.append(
             get_home_path(
                 start_coordinates, arrival_coordinates, distance, "BIKE", date, time
@@ -295,54 +295,66 @@ def get_reduced_path(origin: str, destination: str, date: str, time: str):
 def transform(row):
     paths = row["path"]
 
-    if paths[0]["arrival_time"] != paths[1]["departure_time"]:
-        diff = datetime.strptime(
-            f"{paths[1]['departure_date']} {paths[1]['departure_time']}",
-            "%Y-%m-%d %H:%M",
-        ) - datetime.strptime(
-            f"{paths[0]['arrival_date']} {paths[0]['arrival_time']}", "%Y-%m-%d %H:%M"
-        )
-        paths[0]["departure_date"] = (
-            datetime.strptime(
-                f"{paths[0]['departure_date']} {paths[0]['departure_time']}",
-                "%Y-%m-%d %H:%M",
-            )
-            + diff
-        ).strftime("%Y-%m-%d")
-        paths[0]["departure_time"] = (
-            datetime.strptime(
-                f"{paths[0]['departure_date']} {paths[0]['departure_time']}",
-                "%Y-%m-%d %H:%M",
-            )
-            + diff
-        ).strftime("%H:%M")
-        paths[0]["arrival_date"] = (
-            datetime.strptime(
-                f"{paths[0]['arrival_date']} {paths[0]['arrival_time']}",
-                "%Y-%m-%d %H:%M",
-            )
-            + diff
-        ).strftime("%Y-%m-%d")
-        paths[0]["arrival_time"] = (
-            datetime.strptime(
-                f"{paths[0]['arrival_date']} {paths[0]['arrival_time']}",
-                "%Y-%m-%d %H:%M",
-            )
-            + diff
-        ).strftime("%H:%M")
+    # if paths[0]["arrival_time"] != paths[1]["departure_time"]:
+    #     diff = datetime.strptime(
+    #         f"{paths[1]['departure_date']} {paths[1]['departure_time']}",
+    #         "%Y-%m-%d %H:%M",
+    #     ) - datetime.strptime(
+    #         f"{paths[0]['arrival_date']} {paths[0]['arrival_time']}", "%Y-%m-%d %H:%M"
+    #     )
+    #     departure_date, departure_time = (
+    #         paths[0]["departure_date"],
+    #         paths[0]["departure_time"],
+    #     )
+    #     arrival_date, arrival_time = paths[0]["arrival_date"], paths[0]["arrival_time"]
+    #     paths[0]["departure_date"] = (
+    #         datetime.strptime(
+    #             f"{departure_date} {departure_time}",
+    #             "%Y-%m-%d %H:%M",
+    #         )
+    #         + diff
+    #     ).strftime("%Y-%m-%d")
+    #     paths[0]["departure_time"] = (
+    #         datetime.strptime(
+    #             f"{departure_date} {departure_time}",
+    #             "%Y-%m-%d %H:%M",
+    #         )
+    #         + diff
+    #     ).strftime("%H:%M")
+    #     paths[0]["arrival_date"] = (
+    #         datetime.strptime(
+    #             f"{arrival_date} {arrival_time}",
+    #             "%Y-%m-%d %H:%M",
+    #         )
+    #         + diff
+    #     ).strftime("%Y-%m-%d")
+    #     paths[0]["arrival_time"] = (
+    #         datetime.strptime(
+    #             f"{arrival_date} {arrival_time}",
+    #             "%Y-%m-%d %H:%M",
+    #         )
+    #         + diff
+    #     ).strftime("%H:%M")
 
+    departure_date, departure_time = (
+        paths[0]["departure_date"],
+        paths[0]["departure_time"],
+    )
+    arrival_date, arrival_time = paths[0]["arrival_date"], paths[0]["arrival_time"]
     time = (
         datetime.strptime(
             f"{paths[-1]['arrival_date']} {paths[-1]['arrival_time']}",
             "%Y-%m-%d %H:%M",
         )
         - datetime.strptime(
-            f"{paths[0]['departure_date']} {paths[0]['departure_time']}",
+            f"{departure_date} {departure_time}",
             "%Y-%m-%d %H:%M",
         )
     ).seconds
 
     transfers = len(paths)
+
+    row["path"] = paths
 
     row["duration"] = time
     row["transfers"] = transfers
@@ -407,7 +419,7 @@ def find_recommended_paths(
                 paths.loc[i, "distance_start"],
                 "FOOT",
                 paths.loc[i, "station_to_station_path"][-1]["arrival_date"],
-                paths.loc[0, "station_to_station_path"][-1]["arrival_time"],
+                paths.loc[i, "station_to_station_path"][-1]["arrival_time"],
             ),
             get_work_path(
                 paths.loc[i, "coordinates_start"],
@@ -415,7 +427,7 @@ def find_recommended_paths(
                 paths.loc[i, "distance_start"],
                 "BIKE",
                 paths.loc[i, "station_to_station_path"][-1]["arrival_date"],
-                paths.loc[0, "station_to_station_path"][-1]["arrival_time"],
+                paths.loc[i, "station_to_station_path"][-1]["arrival_time"],
             ),
             get_work_path(
                 paths.loc[i, "coordinates_start"],
@@ -423,7 +435,7 @@ def find_recommended_paths(
                 paths.loc[i, "distance_start"],
                 "CAR",
                 paths.loc[i, "station_to_station_path"][-1]["arrival_date"],
-                paths.loc[0, "station_to_station_path"][-1]["arrival_time"],
+                paths.loc[i, "station_to_station_path"][-1]["arrival_time"],
             ),
         ]
         for i in range(len(paths))
@@ -476,8 +488,8 @@ if __name__ == "__main__":
     start_lat = "46.523904"
     start_lon = "6.564732"
 
-    target_lat = "46.505265"
-    target_lon = "6.627317"
+    target_lat = "47.376476"
+    target_lon = "8.547617"
 
     date = "2023-12-02"
     time = "17:07"
@@ -496,4 +508,5 @@ if __name__ == "__main__":
         transfers_weight,
     )
 
-    print(df)
+    # print(df)
+    df.to_csv("path.csv", index=False)
